@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Stop and remove previous containers
-        run: run: docker compose --env-file /home/nksdal/HMS/.env down --remove-orphans
+        run: docker compose --env-file /home/nksdal/HMS/.env down --remove-orphans
 
       - name: Build and start containers
         run: docker compose --env-file /home/nksdal/HMS/.env up --build -d
@@ -35,7 +35,6 @@ jobs:
         if: always()
         run: docker compose --env-file /home/nksdal/HMS/.env ps
 
-
       - name: Show recent logs
         if: always()
-        run: docker compose --env-file /home/nksdal/HMS/.env logs --tail=100 hms-api
+        run: docker compose --env-file /home/nksdal/HMS/.env logs --tail=100 api
