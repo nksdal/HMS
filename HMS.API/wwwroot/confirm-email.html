@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Confirm Your HMS Account</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; padding: 20px; background: #f4f4f5;
+        }
+        .card {
+            background: #fff; padding: 40px 32px; border-radius: 12px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+            text-align: center; max-width: 420px; width: 100%;
+        }
+        h2 { margin: 0 0 8px; color: #18181b; }
+        p { color: #52525b; line-height: 1.5; }
+        button {
+            background: #2563eb; color: #fff; border: none;
+            padding: 14px 28px; border-radius: 8px;
+            font-size: 16px; font-weight: 600; cursor: pointer;
+            margin-top: 16px; width: 100%;
+        }
+        button:hover:not(:disabled) { background: #1d4ed8; }
+        button:disabled { background: #d4d4d8; cursor: not-allowed; }
+        .message { margin-top: 20px; font-weight: 600; line-height: 1.5; }
+        .success { color: #16a34a; }
+        .error { color: #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Confirm Your Email</h2>
+        <p>Click the button below to activate your HMS account.</p>
+        <button id="verifyBtn">Verify My Account</button>
+        <div id="message" class="message"></div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const email = params.get("email");
+        const token = params.get("token");
+        const messageEl = document.getElementById("message");
+        const btn = document.getElementById("verifyBtn");
+
+        if (!email || !token) {
+            messageEl.textContent = "This confirmation link is invalid or incomplete.";
+            messageEl.className = "message error";
+            btn.disabled = true;
+        }
+
+        btn.addEventListener("click", async () => {
+            btn.disabled = true;
+            btn.textContent = "Verifying...";
+            messageEl.textContent = "";
+
+            try {
+                const response = await fetch("/api/auth/verify-email", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: email, token: token })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    messageEl.textContent = "Your account has been verified. You can now log in.";
+                    messageEl.className = "message success";
+                    btn.textContent = "Verified";
+                } else {
+                    messageEl.textContent = result.message || "Verification failed.";
+                    messageEl.className = "message error";
+                    btn.disabled = false;
+                    btn.textContent = "Try Again";
+                }
+            } catch (err) {
+                messageEl.textContent = "Could not reach the server. Please try again.";
+                messageEl.className = "message error";
+                btn.disabled = false;
+                btn.textContent = "Try Again";
+            }
+        });
+    </script>
+</body>
+</html>
