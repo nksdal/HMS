@@ -1,0 +1,54 @@
+services:
+  api:
+    container_name: hms-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=HMS_DB;User Id=sa;Password=${DB_SA_PASSWORD};TrustServerCertificate=True;"
+      JwtSettings__Secret: ${JWT_SECRET}
+      JwtSettings__Issuer: HMS.API
+      JwtSettings__Audience: HMS.Client
+      JwtSettings__ExpiryMinutes: "60"
+      EmailSettings__Sender: ${EMAIL_ADDRESS}
+      EmailSettings__SmtpServer: smtp.gmail.com
+      EmailSettings__Port: "587"
+      EmailSettings__UseSsl: "true"
+      EmailSettings__Username: ${EMAIL_ADDRESS}
+      EmailSettings__Password: ${EMAIL_APP_PASSWORD}
+      EmailSettings__AppBaseUrl: ${APP_BASE_URL}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  sqlserver:
+    container_name: hms-sqlserver
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${DB_SA_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      - hms-sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q \"SELECT 1\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: always
+
+volumes:
+  hms-sqldata:

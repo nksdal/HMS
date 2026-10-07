@@ -34,6 +34,8 @@ builder.Services.AddControllers(options =>
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
+builder.Services.AddHealthChecks();
+
 
 var app = builder.Build();
 
@@ -54,6 +56,7 @@ app.UseStaticFiles();
 
 app.UseAuthentication();   // must come before UseAuthorization
 app.UseAuthorization();
+app.MapHealthChecks("/health");
 
 app.MapControllers();
 
